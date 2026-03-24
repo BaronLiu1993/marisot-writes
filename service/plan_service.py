@@ -3,17 +3,19 @@ from datetime import datetime, timezone
 
 import anthropic
 from pymongo import MongoClient
-from service.utils.constants import ANTHROPIC_API_KEY, MONGODB_URI
-from plan_dto import MemorySchema, PlanOutputSchema
+from service.tools.constants import ANTHROPIC_API_KEY, MONGODB_URI
+from plan_dto import MemorySchema
 from prompts.plan import planning_system_prompt
 
 # Initialize the Anthropic and Mongo Client
 anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+
+# Initialize MongoDB client and collection
 mongo_client = MongoClient(uri=MONGODB_URI)
 database = mongo_client["database"]
 memory_collection = database.get_collection("memory")
 
-
+# Helper function to clean text data
 def _clean_text(text):
     if not text:
         return ""
@@ -22,7 +24,7 @@ def _clean_text(text):
     text = "\n".join(line.rstrip() for line in text.splitlines())
     return text.strip()
    
-
+# Function to insert into long term memory in MongoDB
 def insert_memory(user_id, thread_id, role, chunks):
     res = []
     for chunk in chunks:
@@ -36,13 +38,18 @@ def insert_memory(user_id, thread_id, role, chunks):
         res.append(memory.model_dump())
     memory_collection.insert_many(res)
 
+# Internal Loop
+
+
 # Create plan first, of what to do with the document and add the current plan to the memory
-# Main function to generate a plan based on the provided context and focus areas
-def generate_plan(context, user_prompt, user_id, thread_id):
+def gather_context(user_prompt, user_id, thread_id):
     response = anthropic_client.messages.create(
-        model="claude-sonnet-4-5",
-        messages=[{"role": "user", "content": planning_system_prompt + context + user_prompt}],
+        model="claude-opus-4-5",
+        messages=[{"role": "user", "content": planning_system_prompt + user_prompt}],
+        tools=claude_tools,
         output_config=PlanOutputSchema
     )
     insert_memory(user_id, thread_id, "plan", [response.content[0].text])
     return response.content[0].text
+
+# Generate action subagents that are orchestrated by the main agent based on the current plan in memory
