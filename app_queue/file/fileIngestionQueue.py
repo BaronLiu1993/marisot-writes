@@ -2,7 +2,6 @@ from celery import Celery
 
 from service.tools.constants import CELERY_BROKER_URL, CELERY_RESULT_BACKEND
 
-
 celery_app = Celery(
 	"file_ingestion",
 	broker=CELERY_BROKER_URL,
@@ -29,7 +28,7 @@ def enqueue_file_ingestion(
 	overlap=200,
 ):
 	return celery_app.send_task(
-		"queue.file.fileIngestionWorker.process_file_from_s3",
+		"app_queue.file.fileIngestionWorker.process_file_from_s3",
 		kwargs={
 			"user_id": user_id,
 			"thread_id": thread_id,

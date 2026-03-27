@@ -15,14 +15,14 @@ make down    # stop MongoDB
 Start worker:
 
 ```bash
-venv/bin/celery -A queue.file.fileIngestionWorker.celery_app worker --loglevel=info
+venv/bin/celery -A queues.file.fileIngestionWorker.celery_app worker --loglevel=info
 ```
 
 Queue module to enqueue tasks:
 
-- [queue/file/fileIngestionQueue.py](queue/file/fileIngestionQueue.py)
+- [queues/file/fileIngestionQueue.py](queues/file/fileIngestionQueue.py)
 - Worker task:
-	- [queue/file/fileIngestionWorker.py](queue/file/fileIngestionWorker.py)
+	- [queues/file/fileIngestionWorker.py](queues/file/fileIngestionWorker.py)
 
 ## Endpoints
 
